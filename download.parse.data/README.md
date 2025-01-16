@@ -7,7 +7,7 @@ Multiple scripts were combined to collect and evaluate the data in the "archival
 These instructions make several assumptions: first, that your analysis is being performed within the repository directories, and second, that the commands are being performed in a Linux-like shell (either Linux, OSX, or a Bash environment in Windows). To begin, download all the code by running:
 
 ```sh
-git clone https://github.com/smangul1/good.software.git
+git clone https://github.com/csangara/good.software.git
 cd good.software/download.parse.data
 ```
 
@@ -15,15 +15,15 @@ cd good.software/download.parse.data
 
 We used data pulled directly from PubMed Central for this part of the study. The entire open access dataset can be downloaded at **[ftp://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_bulk/](https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_bulk/)**, which is also accessible via your browser.
 
-The collections are organized by the first letter of the journal name. For example, running this command would download the data for all journals starting with `A` through `B`:
+Since the publication of Mangul et al., the collections have been [renamed](https://pmc.ncbi.nlm.nih.gov/about/new-in-pmc/#2017-01-19). The new file naming convention is PMCID-based (e.g., PMC4855680.tar.gz) rather than being built from article citation data (i.e., journal abbreviation_pub date_volume_issue_page). For example, running this command would download the data for all journals with PMC ID starting with '000':
 
 ```sh
-wget ftp://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_bulk/non_comm_use.A-B.xml.tar.gz
+wget ftp://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_bulk/oa_noncomm/xml/oa_noncomm_xml.PMC000xxxxxx.baseline.2024-12-18.tar.gz  
 ```
 
-Extracting the files from this archive will reveal a set of directories, one for each journal. Within each of these directories, there is an XML file for each article. We provide an example journal directory (compressed) at [download.parse.data/Nat_Methods.tar.gz](https://github.com/smangul1/good.software/blob/master/download.parse.data/). (This can be extracted by running `tar -xf Nat_Methods.tar.gz` from within the `downloads.parse.data/` directory.)
+To pull the data for 10 journals, you now have to go through each PMC ID range, using the files `download_files.sh` to download the information of the article and `download_files_targz.sh` to download the XML file for each article containing its abstract and body.
 
-The example directory is for the journal _Nature Methods_, but we pulled data from the FTP repository above for 10 journals:
+Next, run `create_journal_directories.R` with the output of the two shell scripts to create folders with the correct format for each of the ten journals for link extraction. You will obtain ten folders:
 
 ```
 BMC_Genomics
@@ -38,7 +38,9 @@ Nat_Biotechnol
 Nucleic_Acids_Res
 ```
 
-To complete this ste,p download the data for whatever journals you want to evaluate, and place their directories directly within the `good.software/download.parse.data` directory. For example, if you only wanted to evaluate articles from _Nature Methods_, your directory structure would look like this:
+An example journal directory (compressed) is provided at [download.parse.data/Nat_Methods.tar.gz](https://github.com/smangul1/good.software/blob/master/download.parse.data/). (This can be extracted by running `tar -xf Nat_Methods.tar.gz` from within the `downloads.parse.data/` directory.)
+
+To complete this step, the directories must be under `good.software/download.parse.data` directory. For example, if you only wanted to evaluate articles from _Nature Methods_, your directory structure would look like this:
 
 ```
 good.software/
@@ -54,7 +56,7 @@ Once the journal directories are all organized, navigate to the `good.software/d
 python getLinksStatus.py Nat_Methods
 ```
 
-**IMPORTANT NOTE:** Though most of the code in this repository is in Python 3, **the `getLinksStatus.py` script requires Python 2.**
+**NOTE:** The scripts have been updated to be compatible with Python 3.
 
 Running this script for each journal you want to evaluate will put two files in the `download.parse.data/` directory: `abstractLinks.prepared.tsv` and `bodyLinks.prepared.tsv`.
 
