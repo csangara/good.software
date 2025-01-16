@@ -1,14 +1,14 @@
 
 import xml.etree.ElementTree
 import re
-import httplib
-from urlparse import urlparse
+import http.client
+from urllib.parse import urlparse
 
 def checkUrl(url):
-	print url
+	print(url)
 	try:
 		p = urlparse(url)
-		conn = httplib.HTTPConnection(p.netloc,timeout=10)
+		conn = http.client.HTTPConnection(p.netloc,timeout=10)
 		conn.request('HEAD', p.path)
 		resp = conn.getresponse()
 		return str(resp.status) # @resp.status is the 404 or 302 or whatever http code name
@@ -22,11 +22,10 @@ def stringBetween (text,tag1,tag2) :
 
 def getPaperPmid ( paperName ):
 	tree = xml.etree.ElementTree.parse(paperName)
-	##
 	paperPmid = ''
 	for node in tree.iter():
 		if node.tag == "article-id" :
-			if (node.attrib['pub-id-type'] == "pmid"):
+			if node.attrib['pub-id-type'] == "pmid":
 				paperPmid = node.text
 				break # only need pmid
 	if len(paperPmid)==0:
@@ -71,28 +70,28 @@ def isNodeTag (node,nodeTag): ## Breadth-first search approach.
   queue = [node]
   if node.tag == nodeTag:
     return [node]
-  if len(node.getchildren())==0:
-		return [] ## this purposely triggers an error
+  if len(list(node))==0:
+    return [] ## this purposely triggers an erroe
   queue.remove(node)
-  queue = queue + node.getchildren()
+  queue = queue + list(node)
   node2return = [] ## @node2return nodes matching the pattern. ie. <ext-link>
   while len(queue)>0: ## not empty
     node = queue[0] ## node to be removed
     queue.remove(node)
     if node.tag == nodeTag:
       node2return.append(node)
-    if len(node.getchildren())>0: ## add more nodes to "probe"
-      queue = queue + node.getchildren()
+    if len(list(node))>0: ## add more nodes to "probe"
+      queue = queue + list(node)
   return node2return
 
 def getLinkInNode (linkNode):
 	if linkNode.text == None:
-		return linkNode.items()[0][1]
+		return list(linkNode.items())[0][1]
 	else:
 		return linkNode.text
 
 def getHttpStatus (paperName,where,journal):
-	print paperName
+	print(paperName)
 	pmid = getPaperPmid ( paperName )
 	pYear = getPaperYear (paperName)
 	linkStatus = getLinkInBody (paperName,where)
@@ -109,11 +108,14 @@ def getLinkInBody ( paperName, where="abstract" )	: # @where is abstract or body
 	if len(httpLinks)==0:
 		return 'NoLink' ## nothing found for this paper
 	linkStatus = ""
-	text = open (paperName ,"r").read() # @text is the entire paper
+	with open(paperName, "r", encoding="utf-8") as file:
+		text = file.read()
+	
 	text = stringBetween ( text,"<"+where+">", "</"+where+">" )
+	
 	for linkNode in httpLinks:
 		link = getLinkInNode(linkNode)
-		if ("Supplementary" in link) | ("supplementary" in link): ## outlink to supp. but not real internet link.
+		if "Supplementary" in link or "supplementary" in link: ## outlink to supp. but not real internet link.
 			continue
 		try:
 			targetTagWord = isSoftware(text, link)
@@ -124,4 +126,4 @@ def getLinkInBody ( paperName, where="abstract" )	: # @where is abstract or body
 		# link = link.strip()
 		status = checkUrl(link)
 		linkStatus = linkStatus + targetTagWord + " " + link + " " + status + " " ## triplet "tag + link + http_code"
-	return linkStatus.encode('utf-8')
+	return linkStatus

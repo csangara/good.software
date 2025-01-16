@@ -1,19 +1,20 @@
-from urllib2 import HTTPError
+from urllib.error import HTTPError
 import xml.etree.ElementTree
 import os,re,sys
 import argparse
-import httplib
-from urlparse import urlparse
+import http.client
+from urllib.parse import urlparse
 from urlXmlUtil import *
 
 ## go inside the Nat_Methods folder, and get the file list
 if len(sys.argv) < 2:
-  print 'Journal directory name required as first parameter.'
+  print('Journal directory name required as first parameter.')
   exit(1)
 
 journal = sys.argv[1]
 dir_location = journal + '/'
 all_xml = os.listdir(dir_location)
+
 output_abstract = open("abstractLinks.prepared.tsv","a")
 output_body = open("bodyLinks.prepared.tsv","a")
 for paperName in all_xml:
