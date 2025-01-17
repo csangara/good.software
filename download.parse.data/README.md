@@ -21,9 +21,7 @@ Since the publication of Mangul et al., the collections have been [renamed](http
 wget ftp://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_bulk/oa_noncomm/xml/oa_noncomm_xml.PMC000xxxxxx.baseline.2024-12-18.tar.gz  
 ```
 
-To pull the data for 10 journals, you now have to go through each PMC ID range, using the files `download_files.sh` to download the information of the article and `download_files_targz.sh` to download the XML file for each article containing its abstract and body.
-
-Next, run `create_journal_directories.R` with the output of the two shell scripts to create folders with the correct format for each of the ten journals for link extraction. You will obtain ten folders:
+To pull the data for 10 journals, you now have to go through each PMC ID range, using the file `download_files.sh`. This also downloads `oa_file_list.csv` which has a list of the download links of each article. We will run `create_journal_directories.R` to download individual articles and move them to the journal directories to be able to use the link extraction scripts. You will obtain ten folders:
 
 ```
 BMC_Genomics

@@ -1,4 +1,9 @@
 library(tidyverse)
+library(parallel)
+setwd("/kyukon/data/gent/vo/000/gvo00070/vsc43831/maintenance_ch")
+
+num_cores <- as.numeric(Sys.getenv("SLURM_NTASKS"))
+cat("num_cores:", num_cores, "\n")
 pmc_ids <- sprintf("%02d", 0:11)
 
 journals_oi <- c("BMC Genomics", "Genet Res (Camb)", "Genome Med", "Nat Methods",
@@ -9,30 +14,42 @@ dir.create("journals")
 lapply(journals_oi, function(journal) dir.create(paste0("journals/", journal), showWarnings = FALSE))
 
 oa_types <- c("comm", "noncomm", "other")
-for (oa_type in oa_types) {
-  # Get list of files
-  filelist <- lapply(pmc_ids, function(pmc_id) {
-      read.csv(paste0("articles_filelist/oa_", oa_type, "_xml.PMC0", pmc_id,
-                      "xxxxxx.baseline.2024-12-18.filelist.csv"))
-    }) %>% bind_rows()
-  
-  # Get journal name by splitting from period
-  data <- filelist %>%
-    mutate(Journal = sapply(strsplit(Article.Citation, "\\."), function(x) x[1]),
-           .after=Article.Citation)
-  
-  for (journal in journals_oi) {
-    data_subset <- data %>% filter(Journal == journal)
-    
-    # Move all XML files to corresponding journal folder
-    data_subset %>%
-      filter(Journal == journal) %>%
-      pull(Article.File) %>%
-      sapply(function(article) {
-        file.copy(from=paste0("articles_tarfiles/oa_", oa_type, "_xml.", str_split_i(article, "/", 1),
-                       ".baseline.2024-12-18/", article),
-                to=paste0("journals/", journal))
-        })
-    
+
+oa_file_list <- read.csv("oa_file_list.csv")
+
+filelist <- lapply(oa_types, function(oa_type){
+  lapply(pmc_ids, function(pmc_id) {
+    read.csv(paste0("articles_filelist/oa_", oa_type, "_xml.PMC0", pmc_id,
+                    "xxxxxx.baseline.2024-12-18.filelist.csv"))
+  }) %>% bind_rows()
+}) %>% bind_rows()
+
+# Get journal name by splitting from period
+data <- filelist %>%
+  mutate(Journal = sapply(strsplit(Article.Citation, "\\."), function(x) x[1]),
+         .after=Article.Citation) %>% 
+  # Join data_subset with oa_file_list by PMID
+  left_join(oa_file_list %>% select(File, PMID, Accession.ID),
+            by=c("AccessionID"="Accession.ID")) %>% 
+  # Some newer articles aren't in the file list yet
+  filter(!is.na(File), Journal %in% journals_oi)
+
+print(data[which(data$PMID.x != data$PMID.y),] %>% nrow) #705
+
+ftp_server <- "ftp://ftp.ncbi.nlm.nih.gov/pub/pmc/"
+
+# Download xml files of all 70297 articles
+mclapply(1:nrow(data), function(i) {
+  accessionID <- data$AccessionID[i]
+  file <- data$File[i]
+  filepath <- paste0("journals/", data$Journal[i], "/", accessionID, ".tar.gz")
+  # If file exists, continue
+  if (file.exists(filepath)) {
+    return(NULL)
   }
-}
+  tryCatch(download.file(paste0(ftp_server, file),
+                destfile = filepath), 
+        error = function(e) print(paste(file, 'did not download')))
+        
+
+}, mc.cores=num_cores)

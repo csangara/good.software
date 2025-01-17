@@ -44,5 +44,8 @@ for DIR in "${DIRECTORIES[@]}"; do
 	done
 done
 
+# Final file
+wget https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_file_list.csv
+
 echo "Download complete."
 
