@@ -68,7 +68,7 @@ def isSoftware (text, link): # @text should be full text (not @abstract)
 
 def isNodeTag (node,nodeTag): ## Breadth-first search approach.
   queue = [node]
-  if node.tag == nodeTag:
+  if bool(re.search(nodeTag, node.tag)):
     return [node]
   if len(list(node))==0:
     return [] ## this purposely triggers an erroe
@@ -78,7 +78,7 @@ def isNodeTag (node,nodeTag): ## Breadth-first search approach.
   while len(queue)>0: ## not empty
     node = queue[0] ## node to be removed
     queue.remove(node)
-    if node.tag == nodeTag:
+    if bool(re.search(nodeTag, node.tag)):
       node2return.append(node)
     if len(list(node))>0: ## add more nodes to "probe"
       queue = queue + list(node)

@@ -19,7 +19,7 @@ output_abstract = open("abstractLinks.prepared.tsv","a")
 output_body = open("bodyLinks.prepared.tsv","a")
 for paperName in all_xml:
   paperName = dir_location + paperName
-  output_abstract.write( getHttpStatus(paperName,'abstract',journal) + "\n" )
+  output_abstract.write( getHttpStatus(paperName,r'abstract(?:\s+[^>]*)?',journal) + "\n" )
   output_body.write( getHttpStatus(paperName,'body',journal) + "\n" )
 
 output_abstract.close()
