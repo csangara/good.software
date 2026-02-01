@@ -21,7 +21,7 @@ Since the publication of Mangul et al., the collections have been [renamed](http
 wget ftp://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_bulk/oa_noncomm/xml/oa_noncomm_xml.PMC000xxxxxx.baseline.2024-12-18.tar.gz  
 ```
 
-To pull the data for 10 journals, you now have to go through each PMC ID range, using the file `download_files.sh`. This also downloads `oa_file_list.csv` which has a list of the download links of each article. We will run `create_journal_directories.R` to download individual articles and move them to the journal directories to be able to use the link extraction scripts. You will obtain ten folders:
+To pull the data for 10 journals, you now have to go through each PMC ID range, using the file `download_files.sh`. This also downloads `oa_file_list.csv` which has a list of the download links of each article. We will run `download_indv_articles.R` with the argument `--first_run` in the command line to download individual articles and move them to the journal directories to be able to use the link extraction scripts. This will result in around 1.2TB of data. You will obtain ten folders:
 
 ```
 BMC_Genomics
@@ -35,6 +35,8 @@ Genome_Biol
 Nat_Biotechnol
 Nucleic_Acids_Res
 ```
+
+As the individual articles are downloaded in .tar.gz format (which includes all the figures and supplementary material), we have to extract it and only get the .nxml file. This is performed via the `extract_files.sh` bash script. There will still be some errors in extracting the files, so you will have to clean up some subdirectories manually by deleting the remaining .tar.gz files and any folders (resulting from incomplete extraction). Then, run `download_indv_articles.R` again without any argument in order to download missing articles.
 
 An example journal directory (compressed) is provided at [download.parse.data/Nat_Methods.tar.gz](https://github.com/smangul1/good.software/blob/master/download.parse.data/). (This can be extracted by running `tar -xf Nat_Methods.tar.gz` from within the `downloads.parse.data/` directory.)
 
