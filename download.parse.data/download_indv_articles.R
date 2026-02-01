@@ -12,7 +12,8 @@ pmc_ids <- sprintf("%02d", 0:11)
 
 journals_oi <- c("BMC Genomics", "Genet Res (Camb)", "Genome Med", "Nat Methods",
                  "PLoS Comput Biol", "BMC Bioinformatics", "BMC Syst Biol",
-                 "Genome Biol", "Nat Biotechnol", "Nucleic Acids Res")
+                 "Genome Biol", "Nat Biotechnol", "Nucleic Acids Res") %>%
+                 gsub(" ", "_", .)
 
 dir.create("journals")
 lapply(journals_oi, function(journal) dir.create(paste0("journals/", journal), showWarnings = FALSE))
@@ -31,7 +32,8 @@ filelist <- lapply(oa_types, function(oa_type){
 # Get journal name by splitting from period
 data <- filelist %>%
   mutate(Journal = sapply(strsplit(Article.Citation, "\\."), function(x) x[1]),
-         .after=Article.Citation) %>% 
+         .after=Article.Citation) %>%
+  mutate(Journal = gsub(" ", "_", Journal)) %>%
   # Join data_subset with oa_file_list by PMID
   left_join(oa_file_list %>% select(File, PMID, Accession.ID),
             by=c("AccessionID"="Accession.ID")) %>% 
@@ -62,8 +64,7 @@ if (first_run){
 } else {
   
   for (journal_oi in journals_oi){
-    journal_path <- gsub(" ", "_", journal_oi)
-    journal_articles <- list.files(paste0("journals/", journal_path), pattern = ".nxml") %>%
+    journal_articles <- list.files(paste0("journals/", journal_oi), pattern = ".nxml") %>%
       gsub(".nxml", "", .)
     data_subset <- data %>% filter(Journal == journal_oi,
                                    !AccessionID %in% journal_articles)
@@ -76,16 +77,16 @@ if (first_run){
     articles_to_delete <- journal_articles[!journal_articles %in% data$AccessionID]
     cat("Deleting ", length(articles_to_delete), "files\n")
     for (article in articles_to_delete) {
-      file.remove(paste0("journals/", journal_path, "/", article, ".nxml"))
+      file.remove(paste0("journals/", journal_oi, "/", article, ".nxml"))
     }
     
     # Download missing articles
     ftp_server <- "ftp://ftp.ncbi.nlm.nih.gov/pub/pmc/"
     
-    mclapply(1:nrow(data), function(i) {
-      accessionID <- data$AccessionID[i]
-      file <- data$File[i]
-      filepath <- paste0("journals/", journal_path, "/", accessionID, ".tar.gz")
+    mclapply(1:nrow(data_subset), function(i) {
+      accessionID <- data_subset$AccessionID[i]
+      file <- data_subset$File[i]
+      filepath <- paste0("journals/", journal_oi, "/", accessionID, ".tar.gz")
       # If file exists, continue
       if (file.exists(filepath)) {
         return(NULL)
