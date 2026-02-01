@@ -1,6 +1,7 @@
 from urllib.request import urlopen
 import urllib
 import re
+import sys
 
 def http2httpsRedirectionCheck(URL):
     """
@@ -31,11 +32,16 @@ def http2httpsRedirectionCheck(URL):
         # No redirection, returns True anyway
         return True
 
-fileWithLinks = open('links.bulk.csv', 'r')
+if len(sys.argv) < 3:
+    print("Script expects two command-line arguments: source file and output file.")
+    print("Example: `python redirection.py ../analysis/links.bulk.csv output_new.csv`")
+    exit(1)
+
+fileWithLinks = open(sys.argv[1], 'r')
 
 skipFirstLine = fileWithLinks.readline() # skip header row
 
-outfile = open('http2https.redirected.csv', 'w', 1)
+outfile = open(sys.argv[2], 'w', 1)
 
 checked = 0
 for line in fileWithLinks:
