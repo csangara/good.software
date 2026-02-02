@@ -1,0 +1,31 @@
+#!/bin/bash -l
+#PBS -l nodes=1:ppn=8
+#PBS -l walltime=24:00:00
+
+# module load Python/2.7.18-GCCcore-12.3.0
+module load Python
+
+cd $PBS_O_WORKDIR
+
+# --- Journal list (same order as your R vector) ---
+journals=(
+  "SPACER"
+  "BMC_Genomics"
+  "Genet_Res"
+  "Genome_Med"
+  "Nat_Methods"
+  "PLoS_Comput_Biol"
+  "BMC_Bioinformatics"
+  "BMC_Syst_Biol"
+  "Genome_Biol"
+  "Nat_Biotechnol"
+  "Nucleic_Acids_Res"
+)
+
+echo $PBS_ARRAYID
+idx=$PBS_ARRAYID
+
+journal="${journals[$idx]}"
+echo "PBS_ARRAYID=$PBS_ARRAYID -> idx=$idx -> journal='${journal}'"
+
+python getLinksStatus.py $journal

@@ -1,0 +1,16 @@
+#!/bin/bash -l
+#PBS -l nodes=1:ppn=6
+#PBS -l walltime=4:00:00
+
+module load Python/3.11.3-GCCcore-12.3.0
+cd $PBS_O_WORKDIR
+source goodsoftware/bin/activate
+
+arr=(AA {00..23})
+
+idx="${arr[$PBS_ARRAYID]}"
+echo "PBS_ARRAYID=$PBS_ARRAYID -> idx=$idx"
+
+python recheck_timeouts.py "links_unchecked_parts/part${idx}.csv" "links_checked_parts/part${idx}.csv"
+
+
