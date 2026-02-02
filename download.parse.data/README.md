@@ -103,7 +103,11 @@ done
 ```
 So now we can run the check in parts. I submitted `recheck_timeout.pbs` to the HPC in multiple parts (to get a quicker queue): `wsub -t 1-5 -batch recheck_timeout.pbs` ... `wsub -t 21-24 -batch recheck_timeout.pbs` This will store the checked links in the directory `links_checked_parts/`.
 
-TODO: Script to create link.bulks.csv.
+You can create links.bulk.csv by removing the header from part01 to part23 as follows:
+```
+cat part00.csv >> links.bulk.csv
+for i in {01..23}; do tail -n +2 "part${i}.csv" >> links.bulk.csv; done
+```
 
 ## Step 4: Collect additional data for analysis
 
@@ -113,7 +117,7 @@ There are two additional files that need to be generated for the analysis that i
 
 If a redirection response changes only the protocol of a request (for example, `http://google.com` to `https://google.com`), then we count that as a `200` instead.
 
-If you are working with the parts, this can also be done in the HPC using `redirection.pbs`.
+If you are working with the parts, this can also be done in the HPC using `redirection.pbs`. This creates files in the `links_redirected/` directory. Luckily the files generated here no longer have headers, so you can simply combine them using `cat part*.csv >> http2https.redirected.csv`.
 
 Otherwise, provided you have `links.bulk.csv`, you can run the following command within the `download.parse.data/` directory:
 
